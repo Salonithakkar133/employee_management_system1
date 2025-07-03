@@ -1,14 +1,10 @@
-
 <?php include 'app/views/template/header.php'; ?>
 <div class="container">
     <h2>Assign User Role Edit</h2>
-    <?php if (!empty($message)): ?>
-        <p class="<?php echo strpos($message, 'failed') !== false ? 'error' : 'message'; ?>">
-            <?php echo htmlspecialchars($message); ?>
-        </p>
-    <?php endif; ?>
+    <div id="message" class="message" style="display: none;"></div>
+    
     <?php if ($user): ?>
-    <form method="POST" action="index.php?page=edit_user&id=<?php echo $user['id']; ?>">
+    <form id="edit-role-form" method="POST" action="index.php?page=edit_user&id=<?php echo $user['id']; ?>">
         <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
         <div>
             <label>Name</label>
@@ -32,7 +28,57 @@
     <?php else: ?>
     <p class="error">User not found.</p>
     <?php endif; ?>
+    
     <p><a href="index.php?page=users">Back to Users</a></p>
-</div>
 
+    <script>
+        document.getElementById('edit-role-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const formData = new FormData(form);
+            const messageDiv = document.getElementById('message');
+            const submitButton = form.querySelector('button[type="submit"]');
+            
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                // Show message
+                messageDiv.textContent = data.message;
+                messageDiv.className = 'message ' + (data.success ? 'success' : 'error');
+                messageDiv.style.display = 'block';
+                
+                if (data.success) {
+                    // Optionally redirect after delay
+                    setTimeout(() => {
+                        window.location.href = 'index.php?page=users';
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                messageDiv.textContent = 'Error updating role. Please try again.';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+            })
+            .finally(() => {
+                // Restore button state
+                submitButton.disabled = false;
+                submitButton.textContent = 'Update Role';
+            });
+        });
+    </script>
+</div>
 <?php include 'app/views/template/footer.php'; ?>

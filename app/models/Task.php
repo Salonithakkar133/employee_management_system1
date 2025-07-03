@@ -14,7 +14,6 @@ class Task {
     public function __construct($db) {
         $this->conn = $db;
     }
-
     private function clean($value) {
         return htmlspecialchars(strip_tags($value));
     }
@@ -55,13 +54,10 @@ class Task {
         $this->created_by = $taskData['created_by'];
         $this->start_date = $taskData['start_date'];
         $this->end_date = $taskData['end_date'];
-
         $this->bindCommonFields($stmt);
         $stmt->bindParam(":created_by", $this->created_by, PDO::PARAM_INT);
-        // print_r($taskData); // Uncomment for debugging
         return $stmt->execute();
     }
-
     public function update() {
         $query = "UPDATE tasks SET title = :title, description = :description, status = :status, assigned_to = :assigned_to,
         start_date = :start_date, end_date = :end_date WHERE id = :id";
@@ -71,9 +67,6 @@ class Task {
         $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
         return $stmt->execute();
     }
-
-    // ... (other methods unchanged)
-
     public function updateStatusOnly() {
         $query = "UPDATE tasks SET status = :status WHERE id = :id AND assigned_to = :assigned_to";
         $stmt = $this->conn->prepare($query);
@@ -91,7 +84,7 @@ class Task {
         return $stmt->execute();
     }
     public function getTaskById($id) {
-        $query = "SELECT t.*, u.name AS assigned_to, c.name AS created_by, t.assigned_to AS assigned_to
+        $query = "SELECT t.*, u.name AS user_assigned_name, c.name AS user_created_name, t.assigned_to AS assigned_to_id
         FROM " . $this->table_name . " t 
         LEFT JOIN users u ON t.assigned_to = u.id 
         LEFT JOIN users c ON t.created_by = c.id 
@@ -100,35 +93,71 @@ class Task {
         $stmt->bindParam(":id", $id);
         $stmt->execute();
         $task = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($task) {
+            $task['assigned_to'] = $task['assigned_to'] ?? 'Unassigned';
+            $task['created_by'] = $task['created_by'] ?? 'Unknown';
+        }
+        
         return $task;
-    }
-
-    // Combined method: replaces readAll() and readByUser()
-public function getTasksByAccess($user_id, $role) {
+}
+public function getTasksByAccess($user_id, $role, $user_search = null, $title_search = null,$start_date = null, $end_date = null) {
         $query = "SELECT 
-            t.*, 
-            a.name AS assigned_to, 
-            c.name AS created_by,
-            t.assigned_to AS assigned_to
+        t.*, 
+        a.name AS assigned_to, 
+        c.name AS created_by,
+        t.assigned_to AS assigned_to_id
         FROM tasks t 
         LEFT JOIN users a ON t.assigned_to = a.id 
         LEFT JOIN users c ON t.created_by = c.id";
+        $params = [];
+        $conditions = [];
         
         if ($role === 'employee') {
-            $query .= " WHERE t.assigned_to = :user_id AND t.is_deleted = 0";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
+            $conditions[] = "t.assigned_to = :user_id";
+            $conditions[] = "t.is_deleted = 0";
+            $params[':user_id'] = $user_id;
         } elseif ($role === 'admin') {
-            $query .= " WHERE 1=1";
-            $stmt = $this->conn->prepare($query);
         } else {
-            $query .= " WHERE t.is_deleted = 0";
-            $stmt = $this->conn->prepare($query);
+            $conditions[] = "t.is_deleted = 0";
         }
+        if (in_array($role, ['admin', 'team_leader'])) {
+            if ($user_search !== null && $user_search !== '') {
+                $conditions[] = "(t.assigned_to = :user_search OR t.created_by = :user_search)";
+                $params[':user_search'] = $user_search;
+            }
+            if ($title_search !== null && $title_search !== '') {
+                $conditions[] = "(t.title LIKE :title_search OR t.description LIKE :title_search)";
+                $params[':title_search'] = '%' . $title_search . '%';
+            }
+            if ($start_date !== null && $start_date !== '') {
+                $conditions[] = "t.start_date >= :start_date";
+                $params[':start_date'] = $start_date;
+            }
+            if ($end_date !== null && $end_date !== '') {
+                $conditions[] = "t.end_date <= :end_date";
+                $params[':end_date'] = $end_date;
+            }
+        }
+
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $stmt = $this->conn->prepare($query);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+
         $stmt->execute();
         $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $stmt->execute(); // Reset cursor for view
-        return $stmt;
+        foreach ($tasks as &$task) {
+            $task['assigned_to'] = $task['assigned_to'] ?? 'Unassigned';
+            $task['created_by'] = $task['created_by'] ?? 'Unknown';
+        }
+        unset($task);
+        $stmt->execute();
+        return $tasks;
+    
 }
 
     public function getAllTasks() {
