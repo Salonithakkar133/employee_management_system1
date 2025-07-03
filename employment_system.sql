@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 01, 2025 at 08:25 AM
+-- Generation Time: Jul 03, 2025 at 04:45 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -45,22 +45,30 @@ CREATE TABLE `tasks` (
 --
 
 INSERT INTO `tasks` (`id`, `title`, `description`, `status`, `start_date`, `end_date`, `assigned_to`, `created_by`, `created_at`, `is_deleted`) VALUES
-(11, 'project', 'project', 'in_progress', '2025-06-26', '2025-07-25', 72, 7, '2025-06-24 12:48:12', 0),
-(12, 'project', 'project', 'pending', NULL, NULL, NULL, 7, '2025-06-24 14:20:26', 1),
-(13, 'project', 'project', 'in_progress', NULL, NULL, 27, 7, '2025-06-25 05:48:35', 1),
-(14, 'p', 'p', 'pending', '2025-06-25', '2025-06-24', NULL, 7, '2025-06-25 13:22:12', 1),
-(15, 'p', 'p', 'pending', '2025-06-25', '2025-06-26', NULL, 7, '2025-06-25 13:43:21', 0),
-(20, 'ppp', 'ppp', 'pending', '2025-06-30', '2025-07-02', 72, NULL, '2025-06-27 11:28:30', 0),
+(11, 'project', 'project12', '', '2025-06-26', '2025-07-25', 72, 7, '2025-06-24 12:48:12', 0),
+(12, 'project33333333', 'project', '', '2025-07-02', '2025-07-02', NULL, 7, '2025-06-24 14:20:26', 0),
+(13, 'project', 'project', 'in_progress', NULL, NULL, 27, 7, '2025-06-25 05:48:35', 0),
+(14, 'p', 'p', 'pending', '2025-06-25', '2025-06-24', NULL, 7, '2025-06-25 13:22:12', 0),
+(15, 'pwife', 'p', '', '2025-07-02', '2025-07-02', NULL, 7, '2025-06-25 13:43:21', 0),
+(20, 'ppp', 'ppp', 'pending', '2025-06-30', '2025-07-02', 72, NULL, '2025-06-27 11:28:30', 1),
 (21, '', NULL, 'pending', NULL, NULL, NULL, NULL, '2025-06-27 11:29:02', 1),
 (23, 'parth', 'parth', 'pending', '2025-06-26', '2025-06-26', 27, 7, '2025-06-27 12:12:50', 1),
 (37, '', '', '', '2025-06-30', '2025-06-30', NULL, 0, '2025-06-30 06:56:29', 1),
 (38, '', '', '', '2025-06-30', '2025-06-30', NULL, 0, '2025-06-30 07:06:27', 1),
 (39, 'ppp', '123', 'in_progress', '2025-06-30', '2025-06-30', 72, 0, '2025-06-30 07:07:56', 1),
-(40, 'pppp', 'pppp', 'in_progress', '2025-06-30', '2025-07-09', 69, 7, '2025-06-30 07:36:04', 1),
+(40, 'pppp', 'pppp', 'in_progress', '2025-06-30', '2025-07-09', NULL, 7, '2025-06-30 07:36:04', 1),
 (41, '111112', '1111', 'completed', '2025-06-30', '2025-07-11', 71, 7, '2025-06-30 09:41:51', 0),
-(42, '555', '555', 'pending', '2025-06-30', '2025-06-30', NULL, 28, '2025-06-30 11:08:00', 1),
+(42, '555', '555', 'pending', '2025-06-30', '2025-06-30', NULL, 28, '2025-06-30 11:08:00', 0),
 (43, 'project123', 'description in detail', 'pending', '2025-06-30', '2025-06-30', 27, 7, '2025-06-30 11:34:21', 0),
-(44, 'saloni', 'to my teacher', 'in_progress', '2025-06-30', '2025-06-30', 27, 28, '2025-06-30 11:44:13', 0);
+(44, 'saloni', 'to my teacher', 'in_progress', '2025-06-30', '2025-06-30', 27, 28, '2025-06-30 11:44:13', 0),
+(45, 'project khushi', 'khushi', 'pending', '2025-07-01', '2025-07-02', NULL, 28, '2025-07-01 10:28:48', 0),
+(46, '123', 'pppppp', 'pending', '2025-07-02', '2025-07-03', NULL, 7, '2025-07-02 10:59:10', 0),
+(47, '555', '555', 'pending', '2025-07-03', '2025-07-04', NULL, 7, '2025-07-02 11:14:32', 0),
+(48, 'q', 'q', 'pending', '2025-07-02', '2025-07-02', NULL, 7, '2025-07-02 15:22:59', 0),
+(49, 'w', 'w', 'pending', '2025-07-03', '2025-07-10', NULL, 7, '2025-07-02 15:23:18', 0),
+(50, 'jjjjjjjjj', 'kkkkkkkk', 'pending', '2025-07-02', '2025-07-02', NULL, 7, '2025-07-02 16:14:30', 0),
+(51, 'pppp', '11', 'pending', '2025-07-03', '2025-07-03', NULL, 7, '2025-07-03 10:14:55', 0),
+(52, '11', '11', 'pending', '2025-07-03', '2025-07-03', NULL, 7, '2025-07-03 10:15:13', 0);
 
 -- --------------------------------------------------------
 
@@ -84,20 +92,15 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `created_at`, `profile_image`, `is_deleted`) VALUES
-(7, 'admin', 'admin@gmail.com', '$2y$10$YJ/OOAJ65ULmYKzMypt/SejEAA8p./DpveqP2iksDT5BVKSzD.50G', 'admin', '2025-06-18 12:14:57', '1751305129_1750765849_WhatsApp Image 2025-06-12 at 9.48.39 PM.jpeg', 0),
-(27, 'saloni', 'saloni@gmail.com', '$2y$10$NTQ89.EpLTYKlmRV9FUSIOeLypfCavgcOn3cWDKMMGD2aNoaFfk0a', 'employee', '2025-06-19 12:32:40', '\r\n', 0),
-(28, 'parth', 'parth@gmail.com', '$2y$10$iWi7sNCeFWC.OGyMcyIpuO2elMmgxMD/gZDjG6iOSXRmuBXSy..M2', 'team_leader', '2025-06-20 05:41:20', '1751305238_1750743010_diet flyer.png', 0),
-(53, 'pragati', 'p@gmail', '$2y$10$CStbCpcqf090DhGlsKk5uO647RHTe7yRvvNveEE.c9ZCExrZScZ46', 'employee', '2025-06-20 12:28:04', NULL, 0),
-(63, 'divyamam', 'd@gmail.com', '$2y$10$ZcQ9H64HsfPtou.MCkrXPe9W0hKRwxdOxnQ/PpJHWdmIJ8lkO1pYy', 'pending', '2025-06-25 09:37:22', NULL, 0),
-(66, 'saloni12', 'admin22@gmail.com', '$2y$10$79FDyCqQ9sehFrNM7tKpq.ilxhCNZ3QQtK.HgmcgsEzkTwlRkdKZu', 'employee', '2025-06-25 10:34:16', NULL, 0),
-(67, 's', 's@gmail.com', '$2y$10$GoTbyww9IVx2C20sF3W3g.Q8ZuvrWO4ZXIMg2ekn.OwB8AGRWW44i', 'pending', '2025-06-25 10:35:06', NULL, 0),
-(69, 'abc', 'a@gmail.com', '$2y$10$89F/v1sDFP09K03e5ZDpZuJGOhqnh18a53mwEWwITt1vH/KFFHjZy', 'pending', '2025-06-25 11:07:21', NULL, 0),
+(7, 'admin12', 'admin@gmail.com', '$2y$10$YJ/OOAJ65ULmYKzMypt/SejEAA8p./DpveqP2iksDT5BVKSzD.50G', 'admin', '2025-06-18 12:14:57', '1751473704_crustopia.png', 0),
+(27, 'saloni123', 'saloni@gmail.com', '$2y$10$NTQ89.EpLTYKlmRV9FUSIOeLypfCavgcOn3cWDKMMGD2aNoaFfk0a', 'employee', '2025-06-19 12:32:40', '\r\n', 0),
+(28, 'parth', 'parth@gmail.com', '$2y$10$iWi7sNCeFWC.OGyMcyIpuO2elMmgxMD/gZDjG6iOSXRmuBXSy..M2', 'team_leader', '2025-06-20 05:41:20', '1751365643_sound.png', 1),
+(53, 'pragati', 'p@gmail', '$2y$10$CStbCpcqf090DhGlsKk5uO647RHTe7yRvvNveEE.c9ZCExrZScZ46', 'pending', '2025-06-20 12:28:04', NULL, 1),
 (70, 'saloni', 'sal@gmail.com', '$2y$10$bwYLFMODqtywRrwwX8EGGOyQFQoVtaGRcFW6UZyH.GG3EwM3D3zlS', 'pending', '2025-06-25 12:23:52', NULL, 0),
 (71, 'pa', 'h@gmail.com', '$2y$10$IQegFQpMUiqVnvxkPjxMreS8B4JD4FpYAYnWPykBE6EACQ99PmkAW', 'pending', '2025-06-25 12:32:08', NULL, 0),
-(72, 'meet', 'm@gmail.com', '$2y$10$9p19n/vv0AhQ0ZxIPmL5SObVc3wkRvnSEb7fRlHoS3ZKKWGmdhD82', 'pending', '2025-06-25 12:37:09', NULL, 0),
-(73, '', '', '$2y$10$ii/R6XSVEm3iLk1ful6bjOjIktN14wR6GJgVAE/rKAbFzOw3Zmg9q', '', '2025-06-27 10:04:14', NULL, 0),
-(104, 'khushi', 'k@gmail.com', '$2y$10$kwl5VhPmR9u6WWbAfuvUCO8mZ6WuwUBCuFyzYfeBMn7B5vHWI/hHG', 'pending', '2025-07-01 06:03:55', NULL, 0),
-(106, 'khushi', 'khushi@gmail.com', '$2y$10$lsnavOSPX/nD6ZwAKCXu..HBE.WONxBGmsLgZGQ1PNCt6zgUzx5m6', 'pending', '2025-07-01 06:05:19', NULL, 0);
+(72, 'meet', 'm@gmail.com', '$2y$10$9p19n/vv0AhQ0ZxIPmL5SObVc3wkRvnSEb7fRlHoS3ZKKWGmdhD82', 'employee', '2025-06-25 12:37:09', NULL, 0),
+(104, 'khushi', 'k2@gmail.com', '$2y$10$kwl5VhPmR9u6WWbAfuvUCO8mZ6WuwUBCuFyzYfeBMn7B5vHWI/hHG', 'employee', '2025-07-01 06:03:55', NULL, 0),
+(155, 'jjjj', 'j@gmail.com', '$2y$10$Cm9LFfDGkXPyaX83yGtTXeX/5oXTklvupahRVm9i1lW3evrG3boRO', 'pending', '2025-07-03 14:44:45', NULL, 0);
 
 --
 -- Indexes for dumped tables
@@ -126,13 +129,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=156;
 
 --
 -- Constraints for dumped tables
