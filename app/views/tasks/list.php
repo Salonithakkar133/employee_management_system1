@@ -122,14 +122,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // 2. Add submit handler
-    searchForm.addEventListener('submit', function(e) {
+        // 2. Add submit handler
+        searchForm.addEventListener('submit', function(e) {
         console.log("Form submit event triggered");
         
         // 3. COMPLETELY prevent default behavior
         e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
         
         // 4. Get form elements
         const submitButton = searchForm.querySelector('button[type="submit"]');
