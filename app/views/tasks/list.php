@@ -128,6 +128,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 3. COMPLETELY prevent default behavior
         e.preventDefault();
+        e.stopPropagation();// It means that where event like clicked it will not trigger the action for not that event byt its parent also
+        e.stopImmediatePropagation();// It means prevents other listeners of the same event from being called
         
         // 4. Get form elements
         const submitButton = searchForm.querySelector('button[type="submit"]');
