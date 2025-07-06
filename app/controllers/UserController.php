@@ -19,9 +19,11 @@ class UserController extends Controller {
         
         $this->view('users/list', ['users' => $users]);
     }
-    public function add() {
+public function add() {
         $this->requireRole('admin');
-        
+        $message = '';
+        $success = false;
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'name' => $this->sanitize($_POST['name']),
@@ -29,19 +31,52 @@ class UserController extends Controller {
                 'password' => $this->sanitize($_POST['password']),
                 'role' => $this->sanitize($_POST['role'])
             ];
-            
-            $result = $this->models['user']->add($data);
-            $message = match ($result) {
-                true => "User added successfully.",
-                "Email is already registered" => "Email is already registered.",
-                default => "Failed to add user."
-            };
-            
-            $this->view('users/add', ['message' => $message]);
-        } else {
-            $this->view('users/add');
+
+            // Basic validation
+            if (empty($data['name']) || empty($data['email']) || empty($data['password']) || empty($data['role'])) {
+                $message = 'All fields are required';
+                if ($this->isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => $message]);
+                    exit;
+                }
+            } else {
+                try {
+                    $result = $this->models['user']->add($data);
+                    $success = $result === true;
+                    $message = match ($result) {
+                        true => 'User added successfully',
+                        'Email is already registered' => 'Email is already registered',
+                        default => 'Failed to add user'
+                    };
+
+                    if ($this->isAjaxRequest()) {
+                        header('Content-Type: application/json');
+                        echo json_encode([
+                            'success' => $success,
+                            'message' => $message,
+                            'user_id' => $success ? $this->models['user']->add($data) : null
+                        ]);
+                        exit;
+                    }
+                } catch (Exception $e) {
+                    $message = $e->getMessage();
+                    if ($this->isAjaxRequest()) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'message' => $message]);
+                        exit;
+                    }
+                }
+            }
+
+            if ($success && !$this->isAjaxRequest()) {
+                $this->redirect('index.php?page=users', $message);
+            }
         }
+
+        $this->view('users/add', ['message' => $message]);
     }
+
     public function edit() {
     $this->requireRoles(['admin', 'team_leader']);
     
@@ -83,13 +118,13 @@ class UserController extends Controller {
             'email' => $this->sanitize($_POST['email']),
             'role' => $user['role'] ?? 'pending' // Fallback role if $user is null
         ];
-        if (!empty($_POST['password'])) {
-            if (strlen($_POST['password']) < 8) {
-                $message = "Password must be at least 8 characters long.";
-            } else {
-                $data['password'] = $this->sanitize($_POST['password']);
-            }
-        }
+        // if (!empty($_POST['password'])) {
+        //     if (strlen($_POST['password']) < 8) {
+        //         $message = "Password must be at least 8 characters long.";
+        //     } else {
+        //         $data['password'] = $this->sanitize($_POST['password']);
+        //     }
+        // }
         if (!empty($_FILES['profile_image']['name'])) {
             $target_dir = "uploads/";
             if (!is_dir($target_dir)) {
@@ -126,10 +161,8 @@ class UserController extends Controller {
             };
             $user = $this->models['user']->getUserById($user_id);
             if (!$user) {
-               
                 $message = "Error: User data not found after update.";
             } else {
-             
             }
         }
     }
@@ -138,57 +171,111 @@ class UserController extends Controller {
         'user' => $user,
         'message' => $message
     ]);
-}    public function update() {
-    $this->requireRoles(['admin', 'team_leader', 'employee']);
-    
-    $user_id = $_GET['id'] ?? null;
-    $user = $this->models['user']->getUserById($user_id);
-    $message = '';
+}   public function update() {
+        // Ensure no output before JSON response
+        ob_start(); // Start output buffering to catch any unintended output
+        
+        $this->requireRoles(['admin', 'team_leader', 'employee']);
+        
+        $user_id = $_GET['id'] ?? null;
+        $user = $this->models['user']->getUserById($user_id);
+        $message = '';
+        $success = false;
 
-    if ($_SESSION['role'] === 'team_leader' && $user['role'] === 'admin') {
-        $this->redirect('users', 'You are not allowed to edit an Admin user.', true);
-    }
-
-    if ($_SESSION['role'] === 'employee' && $_SESSION['id'] != $user_id) {
-        $this->redirect('users', 'You can only edit your own profile.', true);
-    }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!empty($_POST['password']) && strlen($_POST['password']) < 8) {
-            $message = "Password must be at least 8 characters long.";
-        } else {
-            $data = [
-                'id' => $this->sanitize($_POST['id']),
-                'name' => $this->sanitize($_POST['name']),
-                'email' => $this->sanitize($_POST['email']),
-                'role' => $user['role'] // Preserve role unless admin
-            ];
-
-            if (!empty($_POST['password'])) {
-                $data['password'] = $this->sanitize($_POST['password']);
+        if (!$user) {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                ob_end_clean(); // Clear any buffered output
+                echo json_encode(['success' => false, 'message' => 'User not found']);
+                exit;
             }
-
-            if ($_SESSION['role'] === 'admin' && isset($_POST['role'])) {
-                $data['role'] = $this->sanitize($_POST['role']);
-            }
-
-            $result = $this->models['user']->update($data);
-            $message = match ($result) {
-                true => "User updated successfully.",
-                "Email is already registered" => "Email is already registered.",
-                default => "Failed to update user."
-            };
-            $user = $this->models['user']->getUserById($user_id); // Refresh user data
+            $this->redirect('users', 'User not found', true);
         }
+
+        if ($_SESSION['role'] === 'team_leader' && $user['role'] === 'admin') {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                ob_end_clean();
+                echo json_encode(['success' => false, 'message' => 'You are not allowed to edit an Admin user.']);
+                exit;
+            }
+            $this->redirect('users', 'You are not allowed to edit an Admin user.', true);
+        }
+
+        if ($_SESSION['role'] === 'employee' && $_SESSION['id'] != $user_id) {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                ob_end_clean();
+                echo json_encode(['success' => false, 'message' => 'You can only edit your own profile.']);
+                exit;
+            }
+            $this->redirect('users', 'You can only edit your own profile.', true);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!empty($_POST['password']) && strlen($_POST['password']) < 8) {
+                $message = "Password must be at least 8 characters long.";
+                if ($this->isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    ob_end_clean();
+                    echo json_encode(['success' => false, 'message' => $message]);
+                    exit;
+                }
+            } else {
+                $data = [
+                    'id' => $this->sanitize($_POST['id']),
+                    'name' => $this->sanitize($_POST['name']),
+                    'email' => $this->sanitize($_POST['email']),
+                    'role' => $user['role'] // Preserve role unless admin
+                ];
+
+                if (!empty($_POST['password'])) {
+                    $data['password'] = $this->sanitize($_POST['password']);
+                }
+
+                if ($_SESSION['role'] === 'admin' && isset($_POST['role'])) {
+                    $data['role'] = $this->sanitize($_POST['role']);
+                }
+
+                try {
+                    $result = $this->models['user']->update($data);
+                    $success = $result === true;
+                    $message = match ($result) {
+                        true => "User updated successfully.",
+                        "Email is already registered" => "Email is already registered.",
+                        default => "Failed to update user."
+                    };
+
+                    if ($this->isAjaxRequest()) {
+                        header('Content-Type: application/json');
+                        ob_end_clean();
+                        echo json_encode([
+                            'success' => $success,
+                            'message' => $message,
+                            'user' => $this->models['user']->getUserById($user_id)
+                        ]);
+                        exit;
+                    }
+
+                    $user = $this->models['user']->getUserById($user_id); // Refresh user data
+                } catch (Exception $e) {
+                    $message = "Error updating user: " . $e->getMessage();
+                    if ($this->isAjaxRequest()) {
+                        header('Content-Type: application/json');
+                        ob_end_clean();
+                        echo json_encode(['success' => false, 'message' => $message]);
+                        exit;
+                    }
+                }
+            }
+        }
+
+        ob_end_clean(); // Clear output buffer before rendering view
+        $this->view('users/update', [
+            'user' => $user,
+            'message' => $message
+        ]);
     }
-
-    $this->view('users/update', [
-        'user' => $user,
-        'message' => $message
-    ]);
-}
-
-    
 
     public function delete() {
         $this->requireRole('admin');

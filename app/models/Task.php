@@ -35,29 +35,51 @@ class Task {
     }
 
     public function create(array $taskData): mixed {
-        $stmt = $this->conn->prepare("SELECT id FROM users WHERE id = ?");
-        $stmt->execute([$taskData['created_by']]);
-        
-        if (!$stmt->fetch()) {
-            throw new Exception("Invalid user ID: User doesn't exist");
+        try {
+            // Validate created_by
+            $stmt = $this->conn->prepare("SELECT id FROM users WHERE id = ?");
+            $stmt->execute([$taskData['created_by']]);
+            if (!$stmt->fetch()) {
+                throw new Exception("Invalid user ID: User doesn't exist");
+            }
+
+            // Prepare the insert query
+            $query = "INSERT INTO tasks (title, description, status, assigned_to, created_by, start_date, end_date)
+            VALUES (:title, :description, :status, :assigned_to, :created_by, :start_date, :end_date)";
+            $stmt = $this->conn->prepare($query);
+
+            // Set class properties (as in original)
+            $this->title = $taskData['title'];
+            $this->description = $taskData['description'] ?? '';
+            $this->status = $taskData['status'];
+            $this->assigned_to = $taskData['assigned_to'] ?: null;
+            $this->created_by = $taskData['created_by'];
+            $this->start_date = $taskData['start_date'];
+            $this->end_date = $taskData['end_date'];
+
+            // Explicitly bind parameters
+            $stmt->bindParam(':title', $this->title, PDO::PARAM_STR);
+            $stmt->bindParam(':description', $this->description, PDO::PARAM_STR, PDO::PARAM_NULL);
+            $stmt->bindParam(':status', $this->status, PDO::PARAM_STR);
+            $stmt->bindParam(':assigned_to', $this->assigned_to, PDO::PARAM_INT, PDO::PARAM_NULL);
+            $stmt->bindParam(':created_by', $this->created_by, PDO::PARAM_INT);
+            $stmt->bindParam(':start_date', $this->start_date, PDO::PARAM_STR);
+            $stmt->bindParam(':end_date', $this->end_date, PDO::PARAM_STR);
+
+            // Execute and check result
+            $result = $stmt->execute();
+            if ($result && $stmt->rowCount() > 0) {
+                return $this->conn->lastInsertId(); // Return inserted ID
+            } else {
+                throw new Exception("Failed to insert task into database");
+            }
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        } catch (Exception $e) {
+            throw $e;
         }
-
-        $query = "INSERT INTO tasks (title, description, status, assigned_to, created_by, start_date, end_date)
-        VALUES (:title, :description, :status, :assigned_to, :created_by, :start_date, :end_date)";
-        $stmt = $this->conn->prepare($query);
-
-        // Set class properties from taskData 
-        $this->title = $taskData['title'];
-        $this->description = $taskData['description'] ?? '';
-        $this->status = $taskData['status'];
-        $this->assigned_to = $taskData['assigned_to'] ?: null;
-        $this->created_by = $taskData['created_by'];
-        $this->start_date = $taskData['start_date'];
-        $this->end_date = $taskData['end_date'];
-        $this->bindCommonFields($stmt);
-        $stmt->bindParam(":created_by", $this->created_by, PDO::PARAM_INT);
-        return $stmt->execute();
     }
+
     public function update() {
         $query = "UPDATE tasks SET title = :title, description = :description, status = :status, assigned_to = :assigned_to,
         start_date = :start_date, end_date = :end_date WHERE id = :id";

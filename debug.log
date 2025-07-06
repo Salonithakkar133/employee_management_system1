@@ -1,0 +1,18 @@
+2025-07-04 11:41:06 - Binding data: Array
+(
+    [name] => kairavi
+    [email] => kairavi@gmail.com
+    [password] => 12345678
+    [role] => employee
+)
+
+2025-07-04 11:41:06 - Database insert successful for email: kairavi@gmail.com
+2025-07-04 11:56:03 - Binding data: Array
+(
+    [name] => kartik
+    [email] => kartik@gmail.com
+    [password] => 12345678
+    [role] => employee
+)
+
+2025-07-04 11:56:03 - Database insert successful for email: kartik@gmail.com

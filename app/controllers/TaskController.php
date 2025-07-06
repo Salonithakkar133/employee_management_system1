@@ -10,124 +10,161 @@ class TaskController extends Controller {
     }
 
     public function add() {
+        // Start output buffering to prevent unintended output
+        ob_start();
+        
         $this->requireRoles(['admin', 'team_leader']);
         $message = '';
         $success = false;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $taskData = [
-                'title' => $this->sanitize($_POST['title']),
+                'title' => $this->sanitize($_POST['title'] ?? ''),
                 'description' => $this->sanitize($_POST['description'] ?? ''),
-                'status' => $this->sanitize($_POST['status']),
+                'status' => $this->sanitize($_POST['status'] ?? ''),
                 'assigned_to' => $this->sanitize($_POST['assigned_to'] ?: null),
                 'created_by' => $_SESSION['id'],
-                'start_date' => $this->sanitize($_POST['start_date']),
-                'end_date' => $this->sanitize($_POST['end_date'])
+                'start_date' => $this->sanitize($_POST['start_date'] ?? ''),
+                'end_date' => $this->sanitize($_POST['end_date'] ?? '')
             ];
 
-            if (!$this->validateDates($taskData['start_date'], $taskData['end_date'])) {
-                $message = 'End date must be after start date';
-                if ($this->isAjaxRequest()) {
-                    $this->ajaxResponse(false, $message);
+            try {
+                // Call create and expect it to return the inserted ID or throw an exception
+                $result = $this->models['task']->create($taskData);
+                if ($result === false) {
+                    $success = false;
+                    $message = 'Failed to add task to database';
+                } else {
+                    $success = true;
+                    $taskId = is_numeric($result) ? $result : null;
+                    $message = 'Task added successfully';
                 }
-            } else {
-                try {
-                    $success = $this->models['task']->create($taskData);
-                    $message = $success ? 'Task added successfully' : 'Failed to add task';
-                    
-                    if ($this->isAjaxRequest()) {
-                        $this->ajaxResponse($success, $message, ['task_id' => $success]);
-                    }
-                } catch (Exception $e) {
-                    $message = $e->getMessage();
-                    if ($this->isAjaxRequest()) {
-                        $this->ajaxResponse(false, $message);
-                    }
+
+                if ($this->isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    ob_end_clean();
+                    echo json_encode([
+                        'success' => $success,
+                        'message' => $message,
+                        'task_id' => $taskId
+                    ]);
+                    exit;
+                }
+            } catch (Exception $e) {
+                $message = 'Error adding task: ' . $e->getMessage();
+                if ($this->isAjaxRequest()) {
+                    header('Content-Type: application/json');
+                    ob_end_clean();
+                    echo json_encode(['success' => false, 'message' => $message]);
+                    exit;
                 }
             }
 
-            if ($success) {
+            if ($success && !$this->isAjaxRequest()) {
                 $this->redirect('index.php?page=tasks', $message);
             }
         }
 
+        ob_end_clean();
         $this->view('tasks/add', [
             'users' => $this->models['user']->getAllUsers(),
             'message' => $message
         ]);
     }
-public function edit() {
-    $this->requireRoles(['admin', 'team_leader', 'employee']);
-    $task_id = $_GET['id'] ?? null;
-    $task = $this->models['task']->getTaskById($task_id);
-    $message = '';
-    $success = false; // Initialize $success
+    public function edit() {
+        $this->requireRoles(['admin', 'team_leader', 'employee']);
+        $task_id = $_GET['id'] ?? null;
+        $task = $this->models['task']->getTaskById($task_id);
+        $message = '';
+        $success = false;
 
-    if (!$task) {
-        $this->handleTaskNotFound();
-    }
-
-    if ($_SESSION['role'] === 'employee' && $task['assigned_to'] != $_SESSION['id']) {
-        $this->handleUnauthorizedAccess();
-    }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Initialize status with empty string if not set
-        $status = $_POST['status'] ?? '';
-        
-        if ($_SESSION['role'] === 'employee') {
-            $this->models['task']->id = $task_id;
-            $this->models['task']->status = $this->sanitize($status);
-            $success = $this->models['task']->updateStatusOnly();
-            $message = $success ? "Status updated successfully" : "Failed to update status";
-            
+        if (!$task) {
             if ($this->isAjaxRequest()) {
-                $this->ajaxResponse($success, $message);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Task not found']);
+                exit;
             }
-        } else {
-            $taskData = [
-                'id' => $task_id,
-                'title' => $this->sanitize($_POST['title'] ?? ''),
-                'description' => $this->sanitize($_POST['description'] ?? ''),
-                'status' => $this->sanitize($status),
-                'assigned_to' => $this->sanitize($_POST['assigned_to'] ?? null),
-                'start_date' => $this->sanitize($_POST['start_date'] ?? ''),
-                'end_date' => $this->sanitize($_POST['end_date'] ?? '')
-            ];
+            $this->handleTaskNotFound();
+        }
 
-            if (!$this->validateDates($taskData['start_date'], $taskData['end_date'])) {
-                $message = "End date must be after start date";
+        if ($_SESSION['role'] === 'employee' && $task['assigned_to'] != $_SESSION['id']) {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
+                exit;
+            }
+            $this->handleUnauthorizedAccess();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $status = $_POST['status'] ?? '';
+
+            if ($_SESSION['role'] === 'employee') {
+                $this->models['task']->id = $task_id;
+                $this->models['task']->status = $this->sanitize($status);
+                $success = $this->models['task']->updateStatusOnly();
+                $message = $success ? "Status updated successfully" : "Failed to update status";
+
                 if ($this->isAjaxRequest()) {
-                    $this->ajaxResponse(false, $message);
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => $success,
+                        'message' => $message
+                    ]);
+                    exit;
                 }
             } else {
-                $this->models['task']->id = $taskData['id'];
-                $this->models['task']->title = $taskData['title'];
-                $this->models['task']->description = $taskData['description'];
-                $this->models['task']->status = $taskData['status'];
-                $this->models['task']->assigned_to = $taskData['assigned_to'];
-                $this->models['task']->start_date = $taskData['start_date'];
-                $this->models['task']->end_date = $taskData['end_date'];
-                $success = $this->models['task']->update($taskData);
-                $message = $success ? "Task updated successfully" : "Failed to update task";
-                
-                if ($this->isAjaxRequest()) {
-                    $this->ajaxResponse($success, $message);
+                $taskData = [
+                    'id' => $task_id,
+                    'title' => $this->sanitize($_POST['title'] ?? ''),
+                    'description' => $this->sanitize($_POST['description'] ?? ''),
+                    'status' => $this->sanitize($status),
+                    'assigned_to' => $this->sanitize($_POST['assigned_to'] ?? null),
+                    'start_date' => $this->sanitize($_POST['start_date'] ?? ''),
+                    'end_date' => $this->sanitize($_POST['end_date'] ?? '')
+                ];
+
+                if (!$this->validateDates($taskData['start_date'], $taskData['end_date'])) {
+                    $message = "End date must be after start date";
+                    if ($this->isAjaxRequest()) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'message' => $message]);
+                        exit;
+                    }
+                } else {
+                    $this->models['task']->id = $taskData['id'];
+                    $this->models['task']->title = $taskData['title'];
+                    $this->models['task']->description = $taskData['description'];
+                    $this->models['task']->status = $taskData['status'];
+                    $this->models['task']->assigned_to = $taskData['assigned_to'];
+                    $this->models['task']->start_date = $taskData['start_date'];
+                    $this->models['task']->end_date = $taskData['end_date'];
+                    $success = $this->models['task']->update($taskData);
+                    $message = $success ? "Task updated successfully" : "Failed to update task";
+
+                    if ($this->isAjaxRequest()) {
+                        header('Content-Type: application/json');
+                        echo json_encode([
+                            'success' => $success,
+                            'message' => $message,
+                            'task' => $this->models['task']->getTaskById($task_id)
+                        ]);
+                        exit;
+                    }
                 }
+            }
+
+            if ($success && !$this->isAjaxRequest()) {
+                $this->redirect('index.php?page=tasks', $message);
             }
         }
 
-        if ($success) {
-            $this->redirect('index.php?page=tasks', $message);
-        }
+        $this->view('tasks/edit', [
+            'task' => $task,
+            'users' => $this->models['user']->getAllUsers(),
+            'message' => $message
+        ]);
     }
-
-    $this->view('tasks/edit', [
-        'task' => $task,
-        'users' => $this->models['user']->getAllUsers(),
-        'message' => $message
-    ]);
-}
 
 public function list() {
     // Restrict access to authorized roles

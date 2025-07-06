@@ -93,7 +93,7 @@ class User {
 
         $query = "INSERT INTO users (name, email, password, role) VALUES (:name, :email, :password, :role)";
         $stmt = $this->conn->prepare($query);
-        echo($data);
+       // echo($data);
         $this->name = $data['name'];
         $this->email = $data['email'];
         $this->role = $data['role'];
@@ -151,7 +151,7 @@ class User {
             $checkStmt->bindParam(':id', $params[':id'], PDO::PARAM_INT);
             $checkStmt->execute();
             if ($checkStmt->rowCount() === 0) {
-                return "代替 User not found";
+                return "User not found";
             }
 
             $stmt = $this->conn->prepare($query);

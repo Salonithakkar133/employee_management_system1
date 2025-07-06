@@ -3,82 +3,144 @@
     <h2>Add User</h2>
     <div id="message" class="message" style="display: none;"></div>
     
-    <form id="add-user-form" method="POST" action="index.php?page=add_user">
+    <form id="add-user-form" method="POST" action="http://localhost/employee_management_system/index.php?page=add_user" onsubmit="return validateForm(event)" onreset="resetErrors()">
         <div>
             <label>Name</label>
-            <input type="text" name="name" required>
+            <input type="text" id="name" name="name"><br><br>
+            <span id="name-error" class="error-message"></span>
         </div>
         <div>
             <label>Email</label>
-            <input type="email" name="email" required>
+            <input type="email" id="email" name="email">
+            <span id="email-error" class="error-message"></span>
         </div>
         <div>
             <label>Password</label>
-            <input type="password" name="password" required>
+            <input type="password" id="password" name="password">
+            <span id="password-error" class="error-message"></span>
         </div>
         <div>
             <label>Role</label>
-            <select name="role">
+            <select name="role" id="role">
                 <option value="employee">Employee</option>
                 <option value="team_leader">Team Leader</option>
                 <option value="admin">Admin</option>
             </select>
         </div>
-        <button type="submit">Add User</button>
+        <button type="submit" id="submit-button">Add User</button>
     </form>
     
     <p><a href="index.php?page=users">Back to Users</a></p>
 
     <script>
-        document.getElementById('add-user-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const form = this;
+        function validateForm(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            // Get form elements
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const role = document.getElementById("role").value;
+
+            // Get error message elements
+            const nameErr = document.getElementById("name-error");
+            const emailErr = document.getElementById("email-error");
+            const passwordErr = document.getElementById("password-error");
+            const messageDiv = document.getElementById("message");
+            const submitButton = document.getElementById("submit-button");
+
+            // Reset error messages
+            nameErr.textContent = "";
+            emailErr.textContent = "";
+            passwordErr.textContent = "";
+            messageDiv.style.display = "none";
+
+            let isValid = true;
+
+            // Validate name
+            if (name === "" || /\d/.test(name)) {
+                nameErr.textContent = "Please enter a valid name without numbers.";
+                isValid = false;
+            }
+
+            // Validate email
+            if (email === "" || !email.includes("@") || !email.includes(".com")) {
+                emailErr.textContent = "Please enter a valid email address ending with .com.";
+                isValid = false;
+            }
+
+            // Validate password
+            if (password === "" || password.length < 8) {
+                passwordErr.textContent = "Password must be at least 8 characters long.";
+                isValid = false;
+            }
+
+            if (!isValid) {
+                return false;
+            }
+
+            // Prepare form data for AJAX
+            const form = document.getElementById("add-user-form");
             const formData = new FormData(form);
-            const messageDiv = document.getElementById('message');
-            const submitButton = form.querySelector('button[type="submit"]');
-            
-            // Show loading state
+            const submitButtonOriginalText = submitButton.textContent;
+
+            // Disable submit button and show loading state
             submitButton.disabled = true;
             submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
-            
+
+            // Perform AJAX request
             fetch(form.action, {
                 method: 'POST',
-                headers: { 
-                    'X-Requested-With': 'XMLHttpRequest'
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 },
                 body: formData
             })
             .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 return response.json();
             })
             .then(data => {
-                // Show message
-                messageDiv.textContent = data.message;
+                messageDiv.textContent = data.message || "Operation completed";
                 messageDiv.className = 'message ' + (data.success ? 'success' : 'error');
                 messageDiv.style.display = 'block';
-                
+
                 if (data.success) {
-                    // Reset form on success
                     form.reset();
-                    // Optionally redirect after delay
+                    // Ensure the success message is visible for 2 seconds before redirect
                     setTimeout(() => {
-                        window.location.href = 'index.php?page=users';
-                    }, 1500);
+                        messageDiv.textContent = "User added successfully";
+                        messageDiv.className = 'message success';
+                        messageDiv.style.display = 'block';
+                        setTimeout(() => {
+                            window.location.href = 'index.php?page=users';
+                        }, 2000); // Wait 2 seconds to show success message
+                    }, 500);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                messageDiv.textContent = 'Error adding user. Please try again.';
+                console.error("Fetch Error:", error);
+                messageDiv.textContent = "Error adding user: " + error.message;
                 messageDiv.className = 'message error';
                 messageDiv.style.display = 'block';
             })
             .finally(() => {
-                // Restore button state
                 submitButton.disabled = false;
-                submitButton.textContent = 'Add User';
+                submitButton.textContent = submitButtonOriginalText;
             });
-        });
+
+            return false; // Prevent form submission
+        }
+
+        function resetErrors() {
+            document.getElementById("name-error").textContent = "";
+            document.getElementById("email-error").textContent = "";
+            document.getElementById("password-error").textContent = "";
+            document.getElementById("message").style.display = "none";
+        }
     </script>
 </div>
 <?php include 'app/views/template/footer.php'; ?>
