@@ -10,7 +10,7 @@ class TaskController extends Controller {
     }
 
     public function add() {
-        // Start output buffering to prevent unintended output
+        
         ob_start();
         
         $this->requireRoles(['admin', 'team_leader']);
@@ -29,7 +29,6 @@ class TaskController extends Controller {
             ];
 
             try {
-                // Call create and expect it to return the inserted ID or throw an exception
                 $result = $this->models['task']->create($taskData);
                 if ($result === false) {
                     $success = false;

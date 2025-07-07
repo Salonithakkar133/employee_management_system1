@@ -122,7 +122,7 @@ class Task {
         
         return $task;
 }
-public function getTasksByAccess($user_id, $role, $user_search = null, $title_search = null,$start_date = null, $end_date = null) {
+    public function getTasksByAccess($user_id, $role, $user_search = null, $title_search = null,$start_date = null, $end_date = null) {
         $query = "SELECT 
         t.*, 
         a.name AS assigned_to, 

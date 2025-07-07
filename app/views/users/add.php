@@ -34,15 +34,15 @@
 
     <script>
         function validateForm(event) {
-            event.preventDefault(); // Prevent default form submission
+            event.preventDefault(); // Prevent default form submission normally
 
-            // Get form elements
+            // Get form elements from the form
             const name = document.getElementById("name").value.trim();
             const email = document.getElementById("email").value.trim();
             const password = document.getElementById("password").value;
             const role = document.getElementById("role").value;
 
-            // Get error message elements
+            // Get error message 
             const nameErr = document.getElementById("name-error");
             const emailErr = document.getElementById("email-error");
             const passwordErr = document.getElementById("password-error");
@@ -62,6 +62,11 @@
                 nameErr.textContent = "Please enter a valid name without numbers.";
                 isValid = false;
             }
+            if (name === 3) {
+                nameErr.textContent = "Please enter a  name more than 3 letters..";
+                isValid = false;
+            }
+
 
             // Validate email
             if (email === "" || !email.includes("@") || !email.includes(".com")) {
@@ -78,17 +83,12 @@
             if (!isValid) {
                 return false;
             }
-
-            // Prepare form data for AJAX
             const form = document.getElementById("add-user-form");
             const formData = new FormData(form);
             const submitButtonOriginalText = submitButton.textContent;
-
-            // Disable submit button and show loading state
             submitButton.disabled = true;
             submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
 
-            // Perform AJAX request
             fetch(form.action, {
                 method: 'POST',
                 headers: {
@@ -110,19 +110,17 @@
 
                 if (data.success) {
                     form.reset();
-                    // Ensure the success message is visible for 2 seconds before redirect
                     setTimeout(() => {
                         messageDiv.textContent = "User added successfully";
                         messageDiv.className = 'message success';
                         messageDiv.style.display = 'block';
                         setTimeout(() => {
                             window.location.href = 'index.php?page=users';
-                        }, 2000); // Wait 2 seconds to show success message
+                        }, 2000); 
                     }, 500);
                 }
             })
             .catch(error => {
-                console.error("Fetch Error:", error);
                 messageDiv.textContent = "Error adding user: " + error.message;
                 messageDiv.className = 'message error';
                 messageDiv.style.display = 'block';

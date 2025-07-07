@@ -171,9 +171,10 @@ public function add() {
         'user' => $user,
         'message' => $message
     ]);
-}   public function update() {
-        // Ensure no output before JSON response
-        ob_start(); // Start output buffering to catch any unintended output
+}       
+    public function update() {
+        
+        ob_start();
         
         $this->requireRoles(['admin', 'team_leader', 'employee']);
         
@@ -270,7 +271,7 @@ public function add() {
             }
         }
 
-        ob_end_clean(); // Clear output buffer before rendering view
+        ob_end_clean();
         $this->view('users/update', [
             'user' => $user,
             'message' => $message

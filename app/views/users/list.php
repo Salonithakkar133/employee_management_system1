@@ -58,7 +58,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Handle AJAX actions (delete/restore)
             document.querySelectorAll('.ajax-action').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -76,7 +75,6 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Reload the table content
                             fetch('index.php?page=users', {
                                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
                             })
@@ -94,7 +92,6 @@
                         messageContainer.innerHTML = `<p class="message ${data.success ? 'success' : 'error'}">${data.message}</p>`;
                     })
                     .catch(error => {
-                        console.error('Error:', error);
                         messageContainer.innerHTML = '<p class="message error">Action failed. Please try again.</p>';
                     });
                 });

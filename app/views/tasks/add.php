@@ -173,14 +173,12 @@
                         }, 500);
                     }
                 } catch (e) {
-                    console.error("JSON Parse Error:", e, "Response:", text);
                     messageDiv.textContent = "Error adding task: Invalid server response";
                     messageDiv.className = 'message error';
                     messageDiv.style.display = 'block';
                 }
             })
             .catch(error => {
-                console.error("Fetch Error:", error);
                 messageDiv.textContent = "Error adding task: Unable to connect to server";
                 messageDiv.className = 'message error';
                 messageDiv.style.display = 'block';

@@ -87,9 +87,9 @@ class User {
 
     public function add($data) {
         // Basic validation
-        if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            return "Invalid or missing email";
-        }
+        // if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        //     return "Invalid or missing email";
+        // }
 
         $query = "INSERT INTO users (name, email, password, role) VALUES (:name, :email, :password, :role)";
         $stmt = $this->conn->prepare($query);
@@ -112,7 +112,7 @@ class User {
             return "Invalid user ID";
         }
 
-        // Initialize query and parameters
+       
         $query = "UPDATE users SET name = :name, email = :email";
         $params = [
             ':name' => $this->clean($data['name'] ?? ''),
@@ -120,7 +120,7 @@ class User {
             ':id' => (int) $data['id']
         ];
 
-        // Handle optional fields
+        
         if (!empty($data['password'])) {
             if (strlen($data['password']) < 8) {
                 return "Password must be at least 8 characters long";
@@ -146,7 +146,6 @@ class User {
         $query .= " WHERE id = :id";
 
         try {
-            // Verify user exists before update
             $checkStmt = $this->conn->prepare("SELECT id FROM users WHERE id = :id");
             $checkStmt->bindParam(':id', $params[':id'], PDO::PARAM_INT);
             $checkStmt->execute();
@@ -163,7 +162,7 @@ class User {
                 }
             }
 
-            // Execute with transaction for reliability
+
             $this->conn->beginTransaction();
             $stmt->execute();
             $rowCount = $stmt->rowCount();
